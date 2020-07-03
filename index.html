@@ -124,15 +124,23 @@
           return (
             <div className="container mx-auto py-5 body-font">
               <div className="m-auto">
-                <h1 className="title-font sm:text-4xl text-3xl mb-8 font-medium ">COCOA Checker</h1>
+                <h1 className="title-font sm:text-4xl text-3xl mb-8 font-medium ">
+                  COCOA Checker
+                </h1>
                 <div className="mb-6 leading-relaxed">
-                  Web Bluetooth API
+                  Web Bluetooth APIのWeb Bluetooth Scanning
                   を利用し、周囲のCOCOAアプリユーザー数をスキャンして表示します。
                   <br />
                   <code className="bg-gray-200 text-gray-600 quote">
                     chrome://flags/#enable-experimental-web-platform-features
                   </code>
                   の有効化が必要です。
+                  <br />
+                  動作環境は{" "}
+                  <a className="text-blue-400" href="https://github.com/WebBluetoothCG/web-bluetooth/blob/master/implementation-status.md#notes">
+                    こちら
+                  </a>
+                  に記載されています。
                 </div>
                 <Scanner />
               </div>
@@ -145,4 +153,3 @@
     </script>
   </body>
 </html>
-
