@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>COCOA Checker</title>
+    <link
+      href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <script
+      crossorigin
+      src="https://unpkg.com/react@16/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.js"
+    ></script>
+
+    <div id="root"></div>
+
+    <script type="text/babel" async>
+      (async () => {
+        const Alert = ({ message }) => {
+          return (
+            <div role="alert">
+              <div className="bg-red-500 text-white font-bold rounded-t px-4 py-2">
+                Error
+              </div>
+              <div className="border border-t-0 border-red-400 rounded-b bg-red-100 px-4 py-3 text-red-700">
+                <p>{message}</p>
+              </div>
+            </div>
+          );
+        };
+
+        const Scanner = () => {
+          const users = [];
+          const [counter, setCounter] = React.useState(0);
+          const [scanning, setScanning] = React.useState(false);
+          const [error, setError] = React.useState("");
+
+          const addUsers = React.useCallback(
+            (event) => {
+              console.log(event);
+              const { id } = event.device;
+              console.log(users);
+              if (!users.includes(id)) {
+                users.push(id);
+                setCounter(users.length);
+              }
+            },
+            [users, setCounter]
+          );
+
+          const startScan = React.useCallback(async () => {
+            setScanning(true);
+            setError("");
+            const scan = await navigator.bluetooth.requestLEScan({
+              // https://covid19-static.cdn-apple.com/applications/covid19/current/static/contact-tracing/pdf/ExposureNotification-BluetoothSpecificationv1.2.pdf
+              filters: [{ services: [0xfd6f] }],
+            });
+            setTimeout(() => {
+              scan.stop();
+              setScanning(false);
+            }, 10000);
+          }, [setScanning]);
+
+          const handleClick = React.useCallback(async () => {
+            if (
+              "bluetooth" in navigator &&
+              "requestLEScan" in navigator.bluetooth
+            ) {
+              setCounter(0);
+              users.length = 0;
+              try {
+                await startScan();
+                await navigator.bluetooth.addEventListener(
+                  "advertisementreceived",
+                  addUsers
+                );
+              } catch (e) {
+                setError(e.message);
+                setScanning(false);
+              }
+            } else {
+              setError(
+                "このブラウザではWeb Bluetooth APIをサポートしていません。"
+              );
+            }
+          }, [setCounter, startScan, addUsers]);
+          return (
+            <div>
+              <button
+                className={`bg-blue-500 text-white font-bold py-2 px-4 border-2 rounded-full ${
+                  scanning
+                    ? "cursor-not-allowed bg-blue-700"
+                    : "hover:bg-blue-700"
+                }`}
+                onClick={handleClick}
+                disabled={scanning}
+              >
+                {scanning ? "スキャン中..." : "スキャンする"}
+              </button>
+              {error && (
+                <div className="my-6">
+                  <Alert message={error} />
+                </div>
+              )}
+              <div className="mt-6">
+                <h2>現在のユーザー数</h2>
+                <p className="text-2xl">{counter}</p>
+              </div>
+            </div>
+          );
+        };
+
+        const Main = () => {
+          return (
+            <div className="container mx-auto px-4 lg:pt-24 lg:pb-64">
+              <div className="m-auto">
+                <h1 className="text-3xl sm:text-lg  mb-8">COCOA Checker</h1>
+                <div className="mb-6">
+                  Web Bluetooth API
+                  を利用し、周囲のCOCOAアプリユーザー数をスキャンして表示します。
+                  <br />
+                  <code className="bg-gray-200 text-gray-600 quote">
+                    chrome://flags/#enable-experimental-web-platform-features
+                  </code>
+                  の有効化が必要です。
+                </div>
+                <Scanner />
+              </div>
+            </div>
+          );
+        };
+
+        ReactDOM.render(<Main />, document.getElementById("root"));
+      })();
+    </script>
+  </body>
+</html>
+
